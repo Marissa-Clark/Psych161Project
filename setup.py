@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 PACKAGES = find_packages()
 
 # Get version and release info, which is all stored in shablona/version.py
-ver_file = os.path.join('genetic_alg', 'version.py')
+ver_file = os.path.join('geneticalg', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
@@ -25,6 +25,6 @@ opts = dict(name=NAME,
             install_requires=REQUIRES,
             requires=REQUIRES)
 
-
-if __name__ == '__main__':
-    setup(**opts)
+#
+# if __name__ == '__main__':
+#     setup(**opts)

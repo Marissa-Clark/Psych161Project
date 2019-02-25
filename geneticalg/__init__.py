@@ -1,2 +1,4 @@
+#!/usr/bin/python
+
 from __future__ import absolute_import, division, print_function
-from ga import *  # noqa
+from geneticalg import *
