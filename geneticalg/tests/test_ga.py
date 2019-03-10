@@ -1,4 +1,4 @@
-from geneticalg import gen_chrom, calc_duration
+from ..geneticalg import gen_chrom, calc_duration
 import numpy as np
 
 
