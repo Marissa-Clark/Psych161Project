@@ -2,9 +2,10 @@
 import numpy as np
 from numpy import linalg
 import random
+from random import randint
 
 
-def gen_chromosome(max_seconds, video_list, video_lengths):
+def gen_chromosome(max_seconds, video_lengths):
     """Generate a dummy-coded chromosome whose total time is less than the max
     time listed
 
@@ -26,7 +27,7 @@ def gen_chromosome(max_seconds, video_list, video_lengths):
     """
     num_seconds = 100000000
     while num_seconds > max_seconds:
-        chrom = np.random.choice([0, 1], size=(len(video_list),),
+        chrom = np.random.choice([0, 1], size=(len(video_lengths),),
                                  p=[4./5, 1./5])
         num_seconds = sum(chrom*video_lengths)
     return chrom
@@ -137,4 +138,123 @@ def mutate(chromosome, max_attempts, video_lengths, max_seconds):
         calc_duration(chromosome, video_lengths)):
             return mutated
 
-    return gen_chromosome()
+    return gen_chromosome(max_seconds, video_lengths)
+
+
+def crossover(chromosome1, chromosome2, max_attempts, video_lengths,
+              max_seconds):
+    """Crosses over two chromosomes like what happens in genetic crossover
+    This time, it shuffles crossover points because we don't want two genes to
+    be associated
+
+    Returns
+    -------
+    listed
+        list of two chromosomes
+
+    """
+    for numAttempt in range(0, max_attempts):
+
+            rearrange = random.sample(range(0, len(video_lengths)),
+                                      len(video_lengths))
+            p1_shuffle = [x for _, x in sorted(zip(rearrange, chromosome1))]
+            p2_shuffle = [x for _, x in sorted(zip(rearrange, chromosome2))]
+            ordershuff = [x for _, x in sorted(zip(rearrange, range(0, len(video_lengths))))]
+
+            # Get Crossover Point
+            crossoverpoint = randint(0, len(chromosome1))
+
+            # Cross Over
+            p1_l = p1_shuffle[:crossoverpoint]
+            p1_r = p1_shuffle[crossoverpoint:]
+
+            p2_l = p2_shuffle[:crossoverpoint]
+            p2_r = p2_shuffle[crossoverpoint:]
+
+            c1 = np.append(p1_l, p2_r)
+            c2 = np.append(p2_l, p1_r)
+
+            # Unsort Chromosomes
+            c1 = np.array([x for _, x in sorted(zip(ordershuff, c1))])
+            c2 = np.array([x for _, x in sorted(zip(ordershuff, c2))])
+
+            returned_children = []
+
+            for c_test in c1, c2:
+                if ((calc_duration(c_test, video_lengths) < max_seconds) and
+                    (calc_duration(c_test, video_lengths) != calc_duration(chromosome1, video_lengths)) and
+                    (calc_duration(c_test, video_lengths) != calc_duration(chromosome2, video_lengths))):
+                        returned_children.append(c_test)
+                else:
+                        returned_children.append(gen_chromosome(max_seconds, video_lengths))
+
+            return returned_children
+
+
+def sort_chromosomes(chromosomes, video_list, video_data):
+    """Sorts chromosome in order of fitness
+
+    Parameters
+    ----------
+    chromosomes : type
+        Description of parameter `chromosomes`.
+    video_list : type
+        Description of parameter `video_list`.
+    video_data : type
+        Description of parameter `video_data`.
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
+    return [x for _, x in sorted(zip(calc_fitness_all(chromosomes, video_list,
+                                 video_data), chromosomes), reverse=True)]
+
+
+def list_duplicates(list):
+    """Lists duplicates of a list
+
+    Parameters
+    ----------
+    list : type
+        Description of parameter `list`.
+
+    Returns
+    -------
+    type
+        List of duplicated items
+
+    """
+    seen = set()
+    seen_add = seen.add
+    # adds all elements it doesn't know yet to seen and all other to seen_twice
+    seen_twice = set(x for x in seq if x in seen or seen_add(x))
+    # turn the set into a list (as requested)
+    return list(seen_twice)
+
+
+def del_duplicates(chromosomes, video_list, video_data):
+    """Deletes duplicates so they can be sorted
+
+    Parameters
+    ----------
+    chromosomes : type
+        Description of parameter `chromosomes`.
+    video_list : type
+        Description of parameter `video_list`.
+    video_data : type
+        Description of parameter `video_data`.
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
+    while len(list_duplicates(calc_fitness_all(chromosomes, video_list, video_data))) > 0:
+        fitness = calc_fitness_all(chromosomes, video_list, video_data)
+        del chromosomes[fitness.index(list_duplicates(fitness)[0])]
+
+    return chromosomes
